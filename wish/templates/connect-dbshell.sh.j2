@@ -1,0 +1,11 @@
+{% raw %}
+#!/usr/bin/env bash
+{% endraw %}
+
+sudo -u nobody \
+  CL_HOME=/production/{{ app }}/current \
+  PYTHONPATH=/production/{{ app }}/current \
+  /production/{{ app }}/persistent/virtualenv/bin/python \
+  /production/{{ app }}/current/{{ app }}/dbshell.py \
+  --env={{ flag_env }}
+

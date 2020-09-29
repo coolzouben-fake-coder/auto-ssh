@@ -1,0 +1,42 @@
+---
+- name: Prepare dev tools on localhost
+  hosts: localhost
+  connection: localhost
+  gather_facts: false
+  tasks:
+    - name: Generate SSH config files for localhost
+      template:
+        src: ssh_config.j2
+        dest: "{{ lookup('env', 'HOME') }}/.ssh/config.d/{{ item }}.gen"
+        mode: 0644
+      vars:
+        domain: "{{ item }}"
+      loop:
+        - wishwms # must have a group named "wishwms"
+        - wishpost
+      when: "item in groups"
+
+- name: Prepare dev tools on remote servers
+  hosts:
+    - wishwms_be_testing
+    - wishpost_be_testing
+    - wishpost_be_qa
+    - wishwms_be_qa
+  remote_user: benzou
+  tasks:
+    - name: Copy useful scripts to remote - Part I
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: 0755
+      loop:
+        - {
+            src: connect-dbshell.sh.j2,
+            dest: "{{ ansible_env.HOME }}/connect-dbshell.sh",
+          }
+    - name: Copy useful scripts to remote - Part II (be only)
+      copy:
+        src: run-script.sh
+        dest: "{{ ansible_env.HOME }}/run-script.sh"
+        mode: 0755
+      when: "'wishwms_be_testing' in group_names or 'wishpost_be_testing' in group_names or 'wishpost_be_qa' in group_names or 'wishwms_be_qa' in group_names"
